@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+
+before_install:
+  - docker build -t againstlies/test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run againstlies/test npm test -- --coverage
+
+after_success:
+  - docker build -t againstlies/multi-client ./client
+  - docker build -t againstlies/multi-nginx ./nginx
+  - docker build -t againstlies/multi-server ./server
+  - docker build -t againstlies/multi-worker ./worker
+  # login in docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # push to docker hub
+  - docker push againstlies/multi-client
+  - docker push againstlies/multi-nginx
+  - docker push againstlies/multi-server
+  - docker push againstlies/multi-worker
